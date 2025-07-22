@@ -6,7 +6,6 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
-# Required permissions for GitHub Pages deployment
 permissions:
   contents: read
   pages: write
@@ -17,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -29,19 +28,36 @@ jobs:
       with:
         submodules: recursive
     
-    - name: Check if dist folder exists
-      run: |
-        if [ ! -d "CGoL-Rust/dist" ]; then
-          echo "Error: CGoL-Rust/dist folder not found!"
-          echo "Please build your project locally first with: cd CGoL-Rust && trunk build --release"
-          exit 1
-        fi
-        echo "Found dist folder, proceeding with deployment..."
+    - name: Install Rust
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        targets: wasm32-unknown-unknown
     
+    - name: Install Trunk
+      uses: jetli/trunk-action@v0.4.0
+      with:
+        version: 'latest'
+    
+    - name: Build with Trunk
+      run: |
+        cd CGoL-Rust
+        trunk build --release
+        
     - name: Prepare deployment files
       run: |
         mkdir -p deploy
         cp -r CGoL-Rust/dist/* deploy/
+        
+        # Verify files exist
+        echo "Built files:"
+        ls -la deploy/
+        
+        # Check for WASM and JS files specifically
+        echo "WASM files:"
+        find deploy/ -name "*.wasm" -ls
+        echo "JS files:"
+        find deploy/ -name "*.js" -ls
+        
         if [ -f "CNAME" ]; then
           cp CNAME deploy/
         fi
