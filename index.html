@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Conway's Game of Life</title>
+  <link href="styles.css" rel="stylesheet"/><!-- if using Tailwind -->
+<link rel="modulepreload" href="/cgol-6baef8d9217b6ad2.js" crossorigin="anonymous" integrity="sha384-R7AsKI6tU3ZVq9qNNlAIrsbcDiy/jq2KWDZ50KuVPkXNJZB5fZblC7HztWJSH0kw"><link rel="preload" href="/cgol-6baef8d9217b6ad2_bg.wasm" crossorigin="anonymous" integrity="sha384-U4ttCCjDTZD7efqfeWG7zYFEsWV5zhCjCrfkVLQ6dVETuC+vKd6MUlKmEbt7FEfP" as="fetch" type="application/wasm"></head>
+<body>
+  <div id="app"></div>
+  <!-- Trunk will inject the WASM bundle here -->
+  <script type="module">
+    import init from "./cgol.js";
+    init();
+  </script>
+  <p>WORK IN PROGRESS</p>
+
+<script type="module">
+import init, * as bindings from '/cgol-6baef8d9217b6ad2.js';
+const wasm = await init({ module_or_path: '/cgol-6baef8d9217b6ad2_bg.wasm' });
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script></body>
+</html>
