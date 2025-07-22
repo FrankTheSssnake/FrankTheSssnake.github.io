@@ -3,8 +3,8 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ master ]  # Change to 'main' if that's your default branch
-  workflow_dispatch:  # Allows manual triggering from GitHub UI
+    branches: [ main ]
+  workflow_dispatch:
 
 # Required permissions for GitHub Pages deployment
 permissions:
@@ -12,7 +12,6 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -25,7 +24,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        submodules: recursive  # This pulls the CGoL submodule
+        submodules: recursive
     
     - name: Check if dist folder exists
       run: |
@@ -39,9 +38,7 @@ jobs:
     - name: Prepare deployment files
       run: |
         mkdir -p deploy
-        # Copy all files from the CGoL dist folder to deployment directory
         cp -r CGoL-Rust/dist/* deploy/
-        # Preserve your custom domain
         if [ -f "CNAME" ]; then
           cp CNAME deploy/
         fi
