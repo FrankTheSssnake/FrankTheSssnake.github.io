@@ -1,0 +1,3 @@
+[submodule "CGoL-Rust"]
+	path = CGoL-Rust
+	url = https://github.com/FrankTheSssnake/CGoL-Rust.git
