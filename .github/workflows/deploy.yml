@@ -1,44 +1,59 @@
 # .github/workflows/deploy.yml
-name: Build and Deploy
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [ master ]  # Change to 'main' if that's your default branch
+  workflow_dispatch:  # Allows manual triggering from GitHub UI
+
+# Required permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
       with:
-        submodules: recursive
+        submodules: recursive  # This pulls the CGoL submodule
     
-    - name: Install Rust
-      uses: dtolnay/rust-toolchain@stable
+    - name: Check if dist folder exists
+      run: |
+        if [ ! -d "CGoL-Rust/dist" ]; then
+          echo "Error: CGoL-Rust/dist folder not found!"
+          echo "Please build your project locally first with: cd CGoL-Rust && trunk build --release"
+          exit 1
+        fi
+        echo "Found dist folder, proceeding with deployment..."
+    
+    - name: Prepare deployment files
+      run: |
+        mkdir -p deploy
+        # Copy all files from the CGoL dist folder to deployment directory
+        cp -r CGoL-Rust/dist/* deploy/
+        # Preserve your custom domain
+        if [ -f "CNAME" ]; then
+          cp CNAME deploy/
+        fi
+   
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        targets: wasm32-unknown-unknown
-    
-    - name: Install Trunk
-      run: cargo install --locked trunk
-    
-    - name: Build Conway's Game of Life
-      run: |
-        cd CGoL-Rust/
-        trunk build --release --public-url /
-    
-    - name: Prepare deployment
-      run: |
-        mkdir -p dist
-        cp -r CGoL-Rust/dist/* dist/
-        cp CNAME dist/
+        path: './deploy'
     
     - name: Deploy to GitHub Pages
-      if: github.ref == 'refs/heads/main'
-      uses: peaceiris/actions-gh-pages@v3
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./dist
-
+      id: deployment
+      uses: actions/deploy-pages@v4
